@@ -286,6 +286,8 @@ See also `shaderlab-font-lock-extra-types'.")
   (set (make-local-variable 'font-lock-defaults) '(shaderlab-font-lock-keywords))
   ;; Register our indentation function
   (set (make-local-variable 'indent-line-function) 'shaderlab-indent-line) 
+  (setq comment-start "//")
+  (setq comment-end "")
   )
 (add-to-list 'auto-mode-alist '("\\.shader" . shaderlab-mode))
 
@@ -293,16 +295,18 @@ See also `shaderlab-font-lock-extra-types'.")
   "Indent current line as SHADERLAB code."
   (interactive)
   (beginning-of-line)
-  (let ((regexp-closing-brace "^[^ \\W\n]*};?\\w*")
-		(regexp-opening-brace "^.*{\\w*$")
+  ;; (let ((regexp-closing-brace "^[^ \\W\n]*};?\\w*")
+  ;; (let ((regexp-closing-brace "^\\s-*}\\s-*$")
+  (let ((regexp-closing-brace "^\\s-*}\\.*")
+		(regexp-opening-brace "^.*{ *\\s-*$")
 		(regexp-empty-line "^[\t ]*\n"))
 	
 	(let ((not-indented t) cur-indent)
 	  (cond ((bobp)
-			 ;(message "bobp")
+			 (message "bobp")
 			 (setq cur-indent 0))
 			((looking-at regexp-closing-brace) ; If the line we are looking at is the end of a block, then decrease the indentation
-			 ;(message "Closing brace")
+			 (message "Closing brace")
 			 (save-excursion
 			   ;Look backwards for a non-whitespace block or an opening brace
 			   (let ((looking-for-line t))
@@ -323,12 +327,13 @@ See also `shaderlab-font-lock-extra-types'.")
 			(t (save-excursion
 				 (while not-indented ; Iterate backwards until we find an indentation hint
 				   (forward-line -1)
+				   ;; (message "Looking at line %s" (what-line))
 				   (cond ((looking-at regexp-closing-brace) ; This hint indicates that we need to indent at the level of the END_ token
-						  ;(message "Found closing brace at %s" (what-line))
+						  ;; (message "Found closing brace at %s" (what-line))
 						  (setq cur-indent (current-indentation))
 						  (setq not-indented nil))
 						 ((looking-at regexp-opening-brace) ; This hint indicates that we need to indent an extra level
-						  ;(message "Found opening brace at %s" (what-line))
+						  ;; (message "Found opening brace at %s" (what-line))
 						  (setq cur-indent (+ (current-indentation) default-tab-width)) ; Do the actual indenting
 						  (setq not-indented nil))
 						 ((bobp)
